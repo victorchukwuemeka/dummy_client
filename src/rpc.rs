@@ -30,8 +30,12 @@ pub async  fn fetch_gossip()->Result<Vec<GossipPeer>>{
 
     let res = client.post(url).json(&payload).send().await?;
     let body: serde_json::Value  = res.json().await?;
-    let peer:Vec<GossipPeer>= serde_json::from_value(body["result"].clone())?;
+    let peer:Vec<GossipPeer> = serde_json::from_value(body["result"].clone())?;
 
     Ok(peer)
 }
+
+
+
+
 

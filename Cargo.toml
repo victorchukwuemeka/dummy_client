@@ -2,5 +2,16 @@
 name = "dummy_client"
 version = "0.1.0"
 edition = "2024"
+authors = ["Victor chukwuemekavictor693@gmail.com"]
+repository = "https://github.com/victorchukwuemeka/dummy_client"
+description = "A learning-first Solana client written in Rust"
+license = "MIT"
+
+
 
 [dependencies]
+tokio = { version = "1", features = ["full"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+reqwest = { version = "0.12", features = ["json", "gzip"] }
+anyhow = "1.0"
