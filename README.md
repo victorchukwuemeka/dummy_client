@@ -62,6 +62,41 @@ By building and using it, you’ll:
 * Implement JSON-RPC for `getBlock`, `getTransaction`, etc.
 * Optional: add **custom analytics** beyond Solana RPC
 
+
+
+
+
+📚 *Why*: Makes the client useful to external tools/dapps, like QuickNode or Helius.
+
+---
+
+## 🚀 Phase 6 — Mini Validator Mode
+- **Replay** transactions locally for validation  
+- **Forward** transactions to real validators (like a proxy)  
+- **Simulate** partial ledger sync  
+
+📚 *Why*: Bridges the gap between light client and full validator. Think of it as “training wheels” for Solana validation.
+
+---
+
+## 🔮 Phase 7 — Advanced Experiments
+- **zk-Light Client**: Use zero-knowledge proofs to verify Solana state transitions trustlessly.  
+- **Cross-Client Testing**: Compare behavior against Solana Labs + Firedancer implementations.  
+- **Custom Modules**: Add unique tooling (e.g., “most active programs in last 10k slots”).  
+
+📚 *Why*: Pushes Dummy Client into research-grade territory. Contributes to the future of Solana infrastructure.
+
+---
+
+## 🏆 Endgame
+By completing this roadmap, Dummy Client evolves into a **full-fledged Solana light client** with validator DNA:  
+- Networking (Gossip)  
+- Ledger Sync (Blocks + Accounts)  
+- PoH Verification  
+- Consensus Simulation  
+- RPC Exposure  
+- Mini Validator Execution  
+
 ---
 
 ## ⚡ Getting Started

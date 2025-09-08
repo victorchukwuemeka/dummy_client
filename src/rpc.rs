@@ -1,7 +1,6 @@
 use anyhow::Result;
 use serde::Deserialize;
 
-
 #[derive(Debug, Deserialize)]
 pub struct GossipPeer{
     //special identity to reconize the memember  of the peer
