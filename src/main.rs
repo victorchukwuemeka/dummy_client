@@ -3,6 +3,11 @@ use tracing_subscriber::{fmt, prelude::*, EnvFilter};
 
 mod gossip;
 mod rpc;
+mod cli;
+use clap::Parser;
+
+use cli::{Cli, Commands, GossipCommands};
+
 
 
 #[tokio::main]
@@ -36,6 +41,23 @@ async fn main()->anyhow::Result<()>{
             peer.pubkey, peer.gossip, peer.tpu , peer.rpc
         );
     }
+
+    let cli = Cli::parse();
+    match cli.command{
+        Commands::Gossip { gossip_cmd }=>{
+            match gossip_cmd {
+                GossipCommands::Peers => {
+                    let peers = rpc::fetch_gossip().await?;
+                    println!("Found {} peers", peers.len());
+                },
+                
+                GossipCommands::Slots => {
+                    println!("Slot announcements not implemented yet");
+                },
+            }
+        }
+    }
+    
 
     Ok(())
 }
