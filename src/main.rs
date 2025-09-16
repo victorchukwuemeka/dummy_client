@@ -4,14 +4,20 @@ use tracing_subscriber::{fmt, prelude::*, EnvFilter};
 mod gossip;
 mod rpc;
 mod cli;
+mod network;
+mod ledger;
+use ledger::Ledger;
+
 use clap::Parser;
 
-use cli::{Cli, Commands, GossipCommands};
 
+use cli::{Cli, Commands, GossipCommands};
+use network::Network;
 
 
 #[tokio::main]
 async fn main()->anyhow::Result<()>{
+    //let mut network = Network::Mainnet;
     
     //open or create a file for logging
     let file_appender = tracing_appender::rolling::never(".", "dummy_client.log");
@@ -31,29 +37,57 @@ async fn main()->anyhow::Result<()>{
     println!("Dummy client started");
     debug!("This is a debug log (hidden unless you set DEBUG filter)");
     
-    let _gossip = gossip::start().await?;
-    let peers = rpc::fetch_gossip().await?;
-    print!("Found peers from {}", peers.len());
+    gossip::start().await?;
+    //let peers = rpc::fetch_gossip().await?;
+    //print!("Found peers from {}", peers.len());
 
-    for peer in peers.iter().take(5){
-        println!(
-            "Peer: {} | Gossip: {:?} |Tpu: {:?} | RPC: {:?}",
-            peer.pubkey, peer.gossip, peer.tpu , peer.rpc
-        );
-    }
 
     let cli = Cli::parse();
     match cli.command{
-        Commands::Gossip { gossip_cmd }=>{
+        Commands::Gossip { gossip_cmd,network ,url }=>{
             match gossip_cmd {
                 GossipCommands::Peers => {
-                    let peers = rpc::fetch_gossip().await?;
-                    println!("Found {} peers", peers.len());
+                    match rpc::fetch_gossip(network, url).await {
+                        Ok(peers) => {
+                            println!("Found {} peers", peers.len());
+                            // You can iterate over peers here if needed
+                            for peer in peers {
+                                println!("Peer: {}", peer.pubkey);
+                            }
+                        }
+                        Err(e) => {
+                            eprintln!("Error fetching peers: {}", e);
+                        }
+                    }
                 },
-                
                 GossipCommands::Slots => {
                     println!("Slot announcements not implemented yet");
                 },
+
+                GossipCommands::Tpu => {
+                    let peers = rpc::fetch_gossip(network, url).await?;
+                    for peer in peers.iter().filter(|p|p.tpu.is_some()) {
+                        println!("Peer {} → TPU: {:?}", peer.pubkey, peer.tpu);
+                    }
+
+                }
+
+                GossipCommands::Rpc=>{
+                    let peers = rpc::fetch_gossip(network, url).await?;
+                    for peer in peers.iter().filter(|p|p.rpc.is_some()){
+                        println!("Peer {} -> RPC: {:?}", peer.pubkey, peer.rpc);
+                    }
+                }
+
+                GossipCommands::All=>{
+                     let peers = rpc::fetch_gossip(network, url).await?;
+                    for peer in peers.iter().take(5){
+                        println!(
+                            "Peer: {} | Gossip: {:?} |Tpu: {:?} | RPC: {:?}",
+                            peer.pubkey, peer.gossip, peer.tpu , peer.rpc
+                        );
+                    }  
+                }
             }
         }
     }

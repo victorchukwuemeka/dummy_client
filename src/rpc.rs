@@ -1,5 +1,8 @@
 use anyhow::Result;
 use serde::Deserialize;
+use crate::network::Network;
+use crate::cli::NetworkOpt;
+
 
 #[derive(Debug, Deserialize)]
 pub struct GossipPeer{
@@ -16,9 +19,16 @@ pub struct GossipPeer{
     pub rpc: Option<String>
 }
 
+pub async  fn fetch_gossip(network_op: NetworkOpt, custom_url: Option<String>)->Result<Vec<GossipPeer>>{
+    let network = Network::from((network_op, custom_url));
+    fetch_gossip_from_network(&network).await
+}
 
-pub async  fn fetch_gossip()->Result<Vec<GossipPeer>>{
-    let url = "https://api.mainnet-beta.solana.com";
+
+
+
+async  fn fetch_gossip_from_network(network: &Network)->Result<Vec<GossipPeer>>{
+    let url = network.rpc_url();
     let client = reqwest::Client::new();
 
     let payload = serde_json::json!({
