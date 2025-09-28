@@ -6,6 +6,7 @@ mod rpc;
 mod cli;
 mod network;
 mod ledger;
+mod db;
 use ledger::Ledger;
 
 use clap::Parser;
