@@ -1,8 +1,9 @@
 
+use std::thread::sleep;
 use std::time::SystemTimeError;
-
 use anyhow::Result;
-
+use anyhow::anyhow;
+use std::time::Duration;
 
 use crate::rpc::{fetch_gossip, GossipPeer};
 use crate::network::Network;
@@ -21,7 +22,7 @@ pub struct Ledger{
 pub struct ParsedBlock{
     pub slot : u64,
     pub parent_slot : u64,
-    pub blockhash : u64,
+    pub blockhash : String,
     pub block_time: i64,
     pub transactions: Vec<ParsedTransaction> 
 }
@@ -53,8 +54,10 @@ impl Ledger{
         let peers = fetch_gossip(network_opt, custom_url).await?;
         Ok(peers)
     }
-
+   
+    
     pub async fn fetch_block(&self, slot:u64)->Result<serde_json::Value>{
+      
         let client  = reqwest::Client::new();
         let payload = serde_json::json!({
             "jsonrpc": "2.0",
@@ -66,9 +69,37 @@ impl Ledger{
             ]
         });
 
-        let res = client.post(&self.rpc_url).json(&payload).send().await?;
-        let body: serde_json::Value = res.json().await?;
-        Ok(body["result"].clone())
+        let mut attempts = 0;
+        loop{
+            attempts += 1;
+            
+            let res = client.post(&self.rpc_url).json(&payload).send().await;
+            
+            match res {
+                Ok(resp)=>{
+                    let body: Value = resp.json().await?;
+                    if !body["result"].is_null() {
+                        return Ok(body["result"].clone())
+                    }else {
+                        return Err(anyhow!(
+                            "No result field in response: {:?}",
+                            body
+                        ));
+                    }
+                }
+                Err(e) =>{
+                    if attempts >= 3 {
+                        return Err(anyhow!("Failed to fetch block after 3 attempts: {}", e));
+                    }
+                    eprintln!("Error fetching block (attempt {}): {}. Retrying...", attempts, e);
+                    sleep(Duration::from_secs(2_u64.pow(attempts)));
+                }
+            }
+        }
+
+
+
+
     }
 
     pub fn parse_block(json : &Value)->Option<ParsedBlock>{
@@ -79,14 +110,14 @@ impl Ledger{
 
         let mut transactions = Vec::new();
         if let Some(txs) = json["transactions"].as_array() {
-        for tx in txs {
-            let signature = tx["transaction"]["signatures"]
+            for tx in txs {
+                let signature = tx["transaction"]["signatures"]
                 .as_array()
                 .and_then(|arr| arr[0].as_str())
                 .unwrap_or_default()
                 .to_string();
-
-            let signers: Vec<String> = tx["transaction"]["message"]["accountKeys"]
+                
+                let signers: Vec<String> = tx["transaction"]["message"]["accountKeys"]
                 .as_array()
                 .map(|arr| {
                     arr.iter()
@@ -95,26 +126,26 @@ impl Ledger{
                 })
                 .unwrap_or_default();
 
-            let program = tx["transaction"]["message"]["instructions"]
+                let program = tx["transaction"]["message"]["instructions"]
                 .as_array()
                 .and_then(|arr| arr[0]["programId"].as_str())
                 .unwrap_or_default()
                 .to_string();
 
-            let status = if tx["meta"]["err"].is_null() {
-                "success".to_string()
-            } else {
-                "failed".to_string()
-            };
-
-            transactions.push(ParsedTransaction {
-                signature,
-                signers,
-                program,
-                status,
-            });
+                let status = if tx["meta"]["err"].is_null() {
+                    "success".to_string()
+                } else {
+                    "failed".to_string()
+                };
+                
+                transactions.push(ParsedTransaction {
+                    signature,
+                    signers,
+                    program,
+                    status,
+                });
+            }
         }
-    }
 
         Some(ParsedBlock {
             slot,
@@ -125,26 +156,18 @@ impl Ledger{
         })
 
     }
-  
-  
-    
 
-    
-
-
-    /*pub async fn store_block(&self, conn: &Connection, block: &serde_json::Value) -> Result<()> {
-        if let Some(slot) = block["slot"].as_u64() {
-            let parent_slot = block["parentSlot"].as_u64().unwrap_or(0);
-            let block_hash = block["blockhash"].as_str().unwrap_or_default();
-            let timestamp  = block["blockTime"].as_i64().unwrap_or(0);
-
-            conn.execute(
-                "INSERT OR REPLACE INTO blocks (slot, parent_slot, block_hash, timestamp) VALUES (?1, ?2, ?3, ?4)",
-                params![slot, parent_slot, block_hash, timestamp],
-            )?;
-
-            // Transactions would be handled in a loop here
+    //high level function fetch,parse and store blocks
+    pub async fn process_block(&self, slot:u64)->Result<()>{
+        let raw = self.fetch_block(slot).await?;
+        if let Some(parsed) = Ledger::parse_block(&raw) {
+            self.db.save_block(&parsed)?;
+            println!("✅ Stored block {} with {} txs", parsed.slot, parsed.transactions.len());
+        }else {
+            eprintln!("⚠️ Failed to parse block {}", slot);
         }
         Ok(())
-    }*/
+    } 
+     
+    
 }
