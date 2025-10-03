@@ -36,9 +36,6 @@ pub struct ParsedTransaction{
 }
 
 
-
-
-
 //the design for the ledger is first get a peer from the validator via gossip
 //fetch the block  aka fetch_peers 
 //parse the block fechted aka blockparser
