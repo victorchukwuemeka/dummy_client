@@ -5,6 +5,7 @@ use anyhow::Result;
 use anyhow::anyhow;
 use std::time::Duration;
 
+
 use crate::rpc::{fetch_gossip, GossipPeer};
 use crate::network::Network;
 use crate::cli::NetworkOpt;
