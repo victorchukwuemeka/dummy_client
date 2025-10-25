@@ -167,5 +167,21 @@ impl Ledger{
         Ok(())
     } 
      
+
+    //fetch all blocks in range
+    /**
+     * get client 
+     * get the body as the payload 
+     * 
+     */
+    pub async fn fetch_slot_in_range(&self, start_slot:u64, end_slot:u64){
+        let client = reqwest::Client::new();
+        let payload = serde_json::json!({
+            "jsonrpc":"2.0",
+            "id": 1,
+            "method":"getblocks",
+            "params":""
+        });
+    }
     
 }
