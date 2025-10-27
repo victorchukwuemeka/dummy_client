@@ -20,4 +20,4 @@ tracing-subscriber = { version = "0.3", features = ["fmt", "env-filter"] }
 tracing-appender = "0.2"
 clap = { version = "4", features = ["derive"] }
 rusqlite = "0.37.0"
-
+bincode = "1.3"

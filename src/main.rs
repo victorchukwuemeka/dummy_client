@@ -1,13 +1,14 @@
 use tracing::{info, warn, error, debug};
 use tracing_subscriber::{fmt, prelude::*, EnvFilter};
 
-mod gossip;
+mod gossipf;
 mod rpc;
 mod cli;
 mod network;
 mod ledger;
 mod db;
 mod poh;
+mod gossip;
 
 use ledger::Ledger;
 
@@ -41,7 +42,7 @@ async fn main()->anyhow::Result<()>{
     println!("Dummy client started");
     debug!("This is a debug log (hidden unless you set DEBUG filter)");
     
-    gossip::start().await?;
+    gossipf::start().await?;
     //let peers = rpc::fetch_gossip().await?;
     //print!("Found peers from {}", peers.len());
 
