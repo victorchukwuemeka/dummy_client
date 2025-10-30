@@ -9,6 +9,7 @@ pub struct Transport{
 } 
 
 impl Transport {
+    
     pub fn new(bind_addr:&str)->io::Result<Self>{
         let  socket =UdpSocket::bind(bind_addr)?;
         socket.set_nonblocking(true)?;

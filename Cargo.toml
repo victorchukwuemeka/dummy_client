@@ -8,6 +8,8 @@ description = "A learning-first Solana client written in Rust"
 license = "MIT"
 
 
+[lib]
+path = "src/lib.rs"
 
 [dependencies]
 tokio = { version = "1", features = ["full"] }
