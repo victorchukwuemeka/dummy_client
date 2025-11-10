@@ -1,6 +1,8 @@
 pub mod message;
 pub mod node;
 pub mod transport;
+pub mod solana;
+pub mod solana_gossip;
 
 use std::time::Duration;
 use std::thread;
