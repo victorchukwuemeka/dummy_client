@@ -13,6 +13,7 @@ pub struct SolanaGossipService{
 
 
 impl SolanaGossipService {
+    
     pub fn new(bind_addr:&str, fanout:usize)->Result<Self>{
         let keypair  = Keypair::new();
         let id = keypair.pubkey().to_string();
@@ -42,7 +43,6 @@ impl SolanaGossipService {
                 }
             }
         }
-
         cluster 
     }
 
